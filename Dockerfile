@@ -17,7 +17,7 @@ RUN dotnet publish "DeportivoUCN.API.csproj" \
     -o /app/out \
  && echo "=== Archivos publicados ===" \
  && ls -la /app/out
-# ================================
+
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app/out .
