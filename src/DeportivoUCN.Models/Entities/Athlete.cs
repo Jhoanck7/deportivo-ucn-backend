@@ -1,11 +1,11 @@
-
-using System;
-using System.Collections.Generic;
-using System.Text;
 namespace DeportivoUCN.Models.Entities;
 
 public class Athlete
 {
-    public Guid Id { get; private set;} = Guid.CreateVersion7();    
+    public int Id { get; set; }    
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
     
+    public int? SportBranchId { get; set; }
+    public SportBranch? SportBranch { get; set; }
 }
