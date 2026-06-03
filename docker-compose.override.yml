@@ -1,8 +1,4 @@
 services:
   api:
-    image: mcr.microsoft.com/dotnet/sdk:10.0
-    volumes:
-      - .:/app
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-    command: dotnet watch run --project /app/src/DeportivoUCN.API --urls http://0.0.0.0:8080
