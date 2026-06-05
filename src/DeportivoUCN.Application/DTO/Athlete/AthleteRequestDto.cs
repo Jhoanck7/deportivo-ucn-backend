@@ -1,8 +1,7 @@
-namespace DeportivoUCN.Models.Entities;
+namespace DeportivoUCN.Application.DTO.Athlete;
 
-public class Athlete
+public class AthleteRequestDto
 {
-    public int Id { get; set; }    
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Rut { get; set; } = string.Empty;
@@ -10,7 +9,5 @@ public class Athlete
     public string Phone { get; set; } = string.Empty;
     public DateTime BirthDate { get; set; }
     public bool IsActive { get; set; } = true;
-    
     public int? SportBranchId { get; set; }
-    public SportBranch? SportBranch { get; set; }
 }

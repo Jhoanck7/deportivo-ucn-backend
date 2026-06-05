@@ -3,6 +3,7 @@ using System;
 using DeportivoUCN.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DeportivoUCN.Infrastructure.Migrations
 {
     [DbContext(typeof(DeportivoUCNContext))]
-    partial class DeportivoUCNContextModelSnapshot : ModelSnapshot
+    [Migration("20260605020158_AddMissingModules")]
+    partial class AddMissingModules
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
