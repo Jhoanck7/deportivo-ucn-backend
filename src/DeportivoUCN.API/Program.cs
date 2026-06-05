@@ -31,6 +31,18 @@ builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddSingleton<IEmailService, EmailService>();
 
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200") // Default Angular port
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+
 // 3. Configure JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "DeportivoUCNSuperSecretKeyForAuthentication123!";
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "DeportivoUCN";
@@ -91,6 +103,8 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
