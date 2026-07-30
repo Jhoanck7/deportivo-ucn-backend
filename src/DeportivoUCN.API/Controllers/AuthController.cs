@@ -25,6 +25,13 @@ public class AuthController(IAuthService authService) : ControllerBase
         return Ok(response);
     }
 
+    [HttpPost("google")]
+    public async Task<ActionResult<GenericResponse<AuthResponseDto>>> GoogleLogin([FromBody] GoogleLoginRequestDto request)
+    {
+        var response = await authService.GoogleLoginAsync(request.IdToken);
+        return Ok(response);
+    }
+
     [HttpGet("users")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<GenericResponse<IEnumerable<UserResponseDto>>>> GetAllUsers()
@@ -48,4 +55,27 @@ public class AuthController(IAuthService authService) : ControllerBase
         var response = await authService.BanUserAsync(id, request);
         return Ok(response);
     }
+
+    [HttpPut("profile")]
+    [Authorize]
+    public async Task<ActionResult<GenericResponse<UserResponseDto>>> UpdateProfile([FromBody] UpdateProfileRequestDto request)
+    {
+        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+        if (string.IsNullOrEmpty(email))
+            return Unauthorized(new { message = "No autorizado" });
+
+        var response = await authService.UpdateProfileAsync(email, request.Rut, request.Phone);
+        return Ok(response);
+    }
+}
+
+public class GoogleLoginRequestDto
+{
+    public string IdToken { get; set; } = string.Empty;
+}
+
+public class UpdateProfileRequestDto
+{
+    public string Rut { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
 }

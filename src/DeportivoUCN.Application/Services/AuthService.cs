@@ -90,6 +90,105 @@ public class AuthService(
         return new GenericResponse<AuthResponseDto>("Login successful", response);
     }
 
+    public async Task<GenericResponse<AuthResponseDto>> GoogleLoginAsync(string idToken)
+    {
+        var handler = new JwtSecurityTokenHandler();
+        if (!handler.CanReadToken(idToken))
+        {
+            throw new ArgumentException("El token de Google no es válido");
+        }
+
+        var jwtToken = handler.ReadJwtToken(idToken);
+        
+        // Validar que el token haya sido emitido para nuestro Client ID
+        var expectedClientId = configuration["Google:ClientId"];
+        var aud = jwtToken.Claims.FirstOrDefault(c => c.Type == "aud")?.Value;
+        if (!string.IsNullOrEmpty(expectedClientId) && expectedClientId != "YOUR_GOOGLE_CLIENT_ID" && aud != expectedClientId)
+        {
+            throw new ArgumentException("El token de Google no fue emitido para esta aplicación (Audience mismatch)");
+        }
+
+        var email = jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
+        if (string.IsNullOrEmpty(email))
+        {
+            throw new ArgumentException("El token de Google no contiene un correo electrónico");
+        }
+
+        var firstName = jwtToken.Claims.FirstOrDefault(c => c.Type == "given_name")?.Value ?? 
+                        jwtToken.Claims.FirstOrDefault(c => c.Type == "name")?.Value ?? "Google";
+        var lastName = jwtToken.Claims.FirstOrDefault(c => c.Type == "family_name")?.Value ?? "User";
+
+        var user = await userRepository.GetByEmailAsync(email);
+        if (user == null)
+        {
+            user = new User
+            {
+                Rut = "G-" + Guid.NewGuid().ToString("N")[..8],
+                Email = email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString()),
+                FirstName = firstName,
+                LastName = lastName,
+                Phone = "",
+                Role = UserRole.User
+            };
+            user = await userRepository.AddAsync(user);
+        }
+
+        if (user.IsBanned)
+            throw new UnauthorizedAccessException($"Tu cuenta está penalizada/vetada. Motivo: {user.BanReason}");
+
+        var token = GenerateJwtToken(user);
+
+        var response = new AuthResponseDto
+        {
+            Token = token,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Role = user.Role.ToString()
+        };
+
+        return new GenericResponse<AuthResponseDto>("Google login successful", response);
+    }
+
+    public async Task<GenericResponse<UserResponseDto>> UpdateProfileAsync(string email, string rut, string phone)
+    {
+        var user = await userRepository.GetByEmailAsync(email);
+        if (user == null)
+            throw new KeyNotFoundException("Usuario no encontrado");
+
+        if (!string.IsNullOrEmpty(rut) && rut != user.Rut)
+        {
+            var existing = await userRepository.GetByRutAsync(rut);
+            if (existing != null)
+                throw new InvalidOperationException("El RUT ya está registrado por otro usuario");
+            user.Rut = rut;
+        }
+
+        if (phone != null)
+        {
+            user.Phone = phone;
+        }
+
+        await userRepository.UpdateAsync(user);
+
+        var dto = new UserResponseDto
+        {
+            Id = user.Id,
+            Rut = user.Rut,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Phone = user.Phone,
+            Role = user.Role.ToString(),
+            IsBanned = user.IsBanned,
+            BanReason = user.BanReason,
+            CreatedAt = user.CreatedAt
+        };
+
+        return new GenericResponse<UserResponseDto>("Perfil actualizado con éxito", dto);
+    }
+
     public async Task<GenericResponse<IEnumerable<UserResponseDto>>> GetAllUsersAsync()
     {
         var users = await userRepository.GetAllAsync();

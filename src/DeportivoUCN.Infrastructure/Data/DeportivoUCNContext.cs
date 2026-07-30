@@ -11,6 +11,7 @@ public class DeportivoUCNContext(DbContextOptions<DeportivoUCNContext> options) 
     public DbSet<User> Users { get; set; }
     public DbSet<Court> Courts { get; set; }
     public DbSet<Booking> Bookings { get; set; }
+    public DbSet<UploadedImage> UploadedImages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
