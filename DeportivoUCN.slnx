@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/DeportivoUCN.API/DeportivoUCN.API.csproj" />
+  <Project Path="src/DeportivoUCN.Application/DeportivoUCN.Application.csproj" />
+  <Project Path="src/DeportivoUCN.Infrastructure/DeportivoUCN.Infrastructure.csproj" />
+  <Project Path="src/DeportivoUCN.Models/DeportivoUCN.Models.csproj" />
+</Solution>

@@ -1,0 +1,10 @@
+services:
+  api:
+    build: .
+    container_name: deportivo_api
+    ports:
+      - "5059:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=192.168.122.9;Port=5432;Database=DeportivoUCN;Username=postgres;Password=${DB_PASSWORD}
+    restart: unless-stopped
