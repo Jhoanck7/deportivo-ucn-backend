@@ -40,6 +40,8 @@ public class PaymentController(DeportivoUCNContext context, IConfiguration confi
         }
 
         using var client = new HttpClient();
+        // Evitar bloqueo WAF agregando un User-Agent real
+        client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
         // Credenciales oficiales de Transbank para el Ambiente de Integración (Pruebas)
         client.DefaultRequestHeaders.Add("Tbk-Api-Key-Id", "597055555532");
         client.DefaultRequestHeaders.Add("Tbk-Api-Key-Secret", "579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C");
@@ -168,6 +170,8 @@ public class PaymentController(DeportivoUCNContext context, IConfiguration confi
 
         // Confirmar transacción (Commit) con la API de Transbank
         using var client = new HttpClient();
+        // Evitar bloqueo WAF agregando un User-Agent real
+        client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
         client.DefaultRequestHeaders.Add("Tbk-Api-Key-Id", "597055555532");
         client.DefaultRequestHeaders.Add("Tbk-Api-Key-Secret", "579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C");
 
