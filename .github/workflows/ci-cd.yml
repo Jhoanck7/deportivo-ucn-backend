@@ -2,9 +2,9 @@ name: Backend CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main", "feature/missing-modules" ]
+    branches: [ "main", "dev", "feature/missing-modules" ]
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -29,8 +29,8 @@ jobs:
   deploy:
     name: Continuous Deployment (CD)
     needs: build
-    runs-on: [self-hosted, linux, backend-vm]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/missing-modules'
+    runs-on: [self-hosted, deportivo-ucn-backend]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/feature/missing-modules'
 
     steps:
     - name: Checkout Code on VM
