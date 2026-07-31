@@ -2,9 +2,9 @@ name: Backend CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main", "feature/missing-modules" ]
+    branches: [ "main", "dev", "feature/missing-modules" ]
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -29,19 +29,25 @@ jobs:
   deploy:
     name: Continuous Deployment (CD)
     needs: build
-    runs-on: [self-hosted, linux, backend-vm]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/missing-modules'
+    runs-on: [self-hosted, deportivo-ucn-backend]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/feature/missing-modules'
 
     steps:
     - name: Checkout Code on VM
       uses: actions/checkout@v4
 
+    - name: Create .env file from GitHub Secrets
+      run: |
+        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" > .env
+        echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+        echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
+
     - name: Restart Docker Containers
       run: |
         if command -v docker-compose &> /dev/null; then
-          docker-compose down
+          docker-compose down --remove-orphans
           docker-compose up -d --build api
         else
-          docker compose down
+          docker compose down --remove-orphans
           docker compose up -d --build api
         fi

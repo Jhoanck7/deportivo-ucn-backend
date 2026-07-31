@@ -25,7 +25,7 @@ public class TransbankCommitResponse
 
 [ApiController]
 [Route("api/transacciones")]
-public class PaymentController(DeportivoUCNContext context) : ControllerBase
+public class PaymentController(DeportivoUCNContext context, IConfiguration configuration) : ControllerBase
 {
     // Almacenamiento en memoria para asociar tokens de Transbank con las reservas locales
     private static readonly Dictionary<string, (int BookingId, string ReturnType)> Transactions = new();
@@ -39,17 +39,38 @@ public class PaymentController(DeportivoUCNContext context) : ControllerBase
             return NotFound(new { message = "Reserva no encontrada" });
         }
 
+        bool useSimulator = configuration.GetValue<bool>("UseWebpaySimulator", true);
+        if (useSimulator)
+        {
+            var simulatedToken = $"sim_token_{Guid.NewGuid().ToString("N")[..8]}";
+            Transactions[simulatedToken] = (booking.Id, returnType);
+            return Ok(new
+            {
+                message = "Transacción iniciada (Simulador)",
+                data = new
+                {
+                    token = simulatedToken,
+                    urlRedireccion = "/webpay-sim.html",
+                    amount = booking.DepositAmount,
+                    courtName = booking.Court?.Name
+                }
+            });
+        }
+
         using var client = new HttpClient();
+        // Evitar bloqueo WAF agregando un User-Agent real
+        client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
         // Credenciales oficiales de Transbank para el Ambiente de Integración (Pruebas)
         client.DefaultRequestHeaders.Add("Tbk-Api-Key-Id", "597055555532");
         client.DefaultRequestHeaders.Add("Tbk-Api-Key-Secret", "579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C");
 
+        var returnUrl = $"{Request.Scheme}://{Request.Host}/api/transacciones/confirmar-real";
         var payload = new
         {
             buy_order = booking.Id.ToString(),
             session_id = returnType,
             amount = (int)booking.DepositAmount,
-            return_url = "http://localhost:5059/api/transacciones/confirmar-real"
+            return_url = returnUrl
         };
 
         try
@@ -148,23 +169,27 @@ public class PaymentController(DeportivoUCNContext context) : ControllerBase
             isSuccess = false;
         }
 
+        string frontendBase = configuration["FrontendUrl"] ?? "http://localhost:4200";
+
         if (string.IsNullOrEmpty(token) || !Transactions.TryGetValue(token, out var txData))
         {
-            return Redirect("http://localhost:4200/rent?payment=cancel");
+            return Redirect($"{frontendBase}/rent?payment=cancel");
         }
 
-        string frontendBase = txData.ReturnType == "SESSION_TEST"
-            ? "http://localhost:4200/reserva-canchas-test.html"
-            : "http://localhost:4200/rent";
+        string targetUrl = txData.ReturnType == "SESSION_TEST"
+            ? $"{frontendBase}/reserva-canchas-test.html"
+            : $"{frontendBase}/rent";
 
         if (!isSuccess)
         {
             Transactions.Remove(token);
-            return Redirect($"{frontendBase}?payment=cancel&bookingId={txData.BookingId}");
+            return Redirect($"{targetUrl}?payment=cancel&bookingId={txData.BookingId}");
         }
 
         // Confirmar transacción (Commit) con la API de Transbank
         using var client = new HttpClient();
+        // Evitar bloqueo WAF agregando un User-Agent real
+        client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
         client.DefaultRequestHeaders.Add("Tbk-Api-Key-Id", "597055555532");
         client.DefaultRequestHeaders.Add("Tbk-Api-Key-Secret", "579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C");
 
@@ -173,7 +198,7 @@ public class PaymentController(DeportivoUCNContext context) : ControllerBase
         if (!response.IsSuccessStatusCode)
         {
             Transactions.Remove(token);
-            return Redirect($"{frontendBase}?payment=cancel&bookingId={txData.BookingId}");
+            return Redirect($"{targetUrl}?payment=cancel&bookingId={txData.BookingId}");
         }
 
         var commitResult = await response.Content.ReadFromJsonAsync<TransbankCommitResponse>();
@@ -190,12 +215,12 @@ public class PaymentController(DeportivoUCNContext context) : ControllerBase
             }
 
             Transactions.Remove(token);
-            return Redirect($"{frontendBase}?payment=success&bookingId={txData.BookingId}&token_ws={token}");
+            return Redirect($"{targetUrl}?payment=success&bookingId={txData.BookingId}&token_ws={token}");
         }
         else
         {
             Transactions.Remove(token);
-            return Redirect($"{frontendBase}?payment=cancel&bookingId={txData.BookingId}");
+            return Redirect($"{targetUrl}?payment=cancel&bookingId={txData.BookingId}");
         }
     }
 }
