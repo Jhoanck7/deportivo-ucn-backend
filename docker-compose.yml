@@ -1,17 +1,4 @@
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: deportivo_db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: DeportivoUCN
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    restart: unless-stopped
-
   api:
     build: .
     container_name: deportivo_api
@@ -19,8 +6,5 @@ services:
       - "5059:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=${CONNECTION_STRING}
+      - ConnectionStrings__DefaultConnection=Host=192.168.122.9;Port=5432;Database=DeportivoUCN;Username=postgres;Password=${DB_PASSWORD}
     restart: unless-stopped
-
-volumes:
-  pgdata:
