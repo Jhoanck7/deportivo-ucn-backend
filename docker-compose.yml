@@ -7,4 +7,5 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=192.168.122.9;Port=5432;Database=DeportivoUCN;Username=postgres;Password=${DB_PASSWORD}
+      - Google__ClientId=${GOOGLE_CLIENT_ID}
     restart: unless-stopped
