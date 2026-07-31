@@ -40,6 +40,7 @@ jobs:
       run: |
         echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" > .env
         echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+        echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
 
     - name: Restart Docker Containers
       run: |
