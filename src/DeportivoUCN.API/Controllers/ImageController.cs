@@ -10,8 +10,10 @@ namespace DeportivoUCN.API.Controllers;
 public class ImageController(DeportivoUCNContext context) : ControllerBase
 {
     [HttpPost("upload")]
-    public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadImage([FromForm] UploadImageDto dto)
     {
+        var file = dto.File;
         if (file == null || file.Length == 0)
         {
             return BadRequest(new { message = "No se ha subido ningún archivo o el archivo está vacío" });
@@ -72,3 +74,9 @@ public class ImageController(DeportivoUCNContext context) : ControllerBase
         return File(image.Data, image.ContentType);
     }
 }
+
+public class UploadImageDto
+{
+    public required IFormFile File { get; set; }
+}
+
