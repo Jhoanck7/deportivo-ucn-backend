@@ -76,14 +76,16 @@ public class BookingService(
         if (fetched == null)
             throw new InvalidOperationException("Error al recuperar la reserva recién creada.");
 
-        var subject = $"Confirmación de Reserva de Cancha - Deportivo UCN";
+        var subject = $"Confirmación de Solicitud de Arriendo - Deportivo UCN";
         var body = $"Hola {user.FirstName} {user.LastName},\n\n" +
-                   $"Tu reserva para la cancha '{court.Name}' ha sido registrada con éxito.\n" +
-                   $"Fecha: {request.Date:dd/MM/yyyy}\n" +
-                   $"Horario: {request.StartHour:00}:00 - {booking.EndHour:00}:00\n" +
-                   $"Abono realizado: ${request.DepositAmount}\n" +
-                   $"Monto restante a pagar: ${court.PricePerHour - request.DepositAmount}\n\n" +
-                   $"Un administrador se contactará contigo a la brevedad por WhatsApp para confirmar.";
+                   $"Hemos recibido tu solicitud de arriendo de cancha en Deportivo UCN con los siguientes detalles:\n\n" +
+                   $"• Cancha: {court.Name}\n" +
+                   $"• Fecha: {request.Date:dd/MM/yyyy}\n" +
+                   $"• Horario: {request.StartHour:00}:00 - {booking.EndHour:00}:00 hrs\n" +
+                   $"• Monto abonado: ${request.DepositAmount}\n" +
+                   $"• Monto restante a pagar: ${court.PricePerHour - request.DepositAmount}\n" +
+                   $"• Estado: Pendiente de aprobación por administración\n\n" +
+                   $"Un administrador revisará tu solicitud a la brevedad. Recibirás una notificación por correo una vez que sea procesada.";
         
         await emailService.SendEmailAsync(user.Email, subject, body);
 
@@ -109,19 +111,46 @@ public class BookingService(
 
         if (booking.User != null && booking.Court != null)
         {
-            var statusMessage = status switch
-            {
-                BookingStatus.Confirmed => "Confirmada",
-                BookingStatus.Cancelled => "Cancelada",
-                BookingStatus.Completed => "Completada",
-                BookingStatus.NoShow => "No Asistió (Penalizado)",
-                _ => "Pendiente"
-            };
+            string subject;
+            string body;
 
-            var subject = $"Actualización de Reserva - Deportivo UCN";
-            var body = $"Hola {booking.User.FirstName} {booking.User.LastName},\n\n" +
-                       $"Tu reserva para la cancha '{booking.Court.Name}' el {booking.Date:dd/MM/yyyy} a las {booking.StartHour:00}:00 ha cambiado a estado: {statusMessage}.\n" +
-                       $"Notas del administrador: {booking.AdminNotes ?? "Ninguna"}";
+            switch (status)
+            {
+                case BookingStatus.Confirmed:
+                    subject = "¡Solicitud Aprobada! Confirmación de Arriendo - Deportivo UCN";
+                    body = $"Hola {booking.User.FirstName} {booking.User.LastName},\n\n" +
+                           $"¡Excelentes noticias! Tu solicitud de arriendo de cancha ha sido ACEPTADA por la administración.\n\n" +
+                           $"Detalles del Arriendo:\n" +
+                           $"• Cancha: {booking.Court.Name}\n" +
+                           $"• Fecha: {booking.Date:dd/MM/yyyy}\n" +
+                           $"• Horario: {booking.StartHour:00}:00 - {booking.EndHour:00}:00 hrs\n" +
+                           $"• Estado: ACEPTADA / CONFIRMADA\n" +
+                           $"• Observaciones del administrador: {booking.AdminNotes ?? "Ninguna"}\n\n" +
+                           $"Te esperamos en el recinto deportivo a la hora agendada. ¡Gracias por usar Deportivo UCN!";
+                    break;
+
+                case BookingStatus.Cancelled:
+                    subject = "Solicitud Rechazada / Cancelada - Deportivo UCN";
+                    body = $"Hola {booking.User.FirstName} {booking.User.LastName},\n\n" +
+                           $"Te informamos que tu solicitud de arriendo para la cancha '{booking.Court.Name}' el día {booking.Date:dd/MM/yyyy} de {booking.StartHour:00}:00 a {booking.EndHour:00}:00 hrs ha sido RECHAZADA / CANCELADA por la administración.\n\n" +
+                           $"Motivo / Observaciones del administrador:\n" +
+                           $"{booking.AdminNotes ?? "Sin observaciones especificadas."}\n\n" +
+                           $"Si tienes preguntas o deseas realizar otra reserva, comunícate con la administración de Deportivo UCN.";
+                    break;
+
+                default:
+                    var statusName = status switch
+                    {
+                        BookingStatus.Completed => "Completada",
+                        BookingStatus.NoShow => "No Asistió (Penalizado)",
+                        _ => status.ToString()
+                    };
+                    subject = "Actualización de Estado de Reserva - Deportivo UCN";
+                    body = $"Hola {booking.User.FirstName} {booking.User.LastName},\n\n" +
+                           $"El estado de tu reserva para la cancha '{booking.Court.Name}' el {booking.Date:dd/MM/yyyy} a las {booking.StartHour:00}:00 hrs ha cambiado a: {statusName}.\n\n" +
+                           $"Notas del administrador: {booking.AdminNotes ?? "Ninguna"}";
+                    break;
+            }
 
             await emailService.SendEmailAsync(booking.User.Email, subject, body);
         }
