@@ -36,6 +36,11 @@ jobs:
     - name: Checkout Code on VM
       uses: actions/checkout@v4
 
+    - name: Create .env file from GitHub Secrets
+      run: |
+        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" > .env
+        echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+
     - name: Restart Docker Containers
       run: |
         if command -v docker-compose &> /dev/null; then
