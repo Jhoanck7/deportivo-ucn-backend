@@ -36,7 +36,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:4200", "http://192.168.122.198", "http://localhost") // Permitir desarrollo local y la IP del frontend en la VM
+        policy.WithOrigins("http://localhost:4200", "http://192.168.122.198", "http://192.168.122.198.nip.io", "http://localhost") // Permitir desarrollo, IP y dominio nip.io
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
