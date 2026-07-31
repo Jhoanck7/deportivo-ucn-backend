@@ -9,6 +9,7 @@ namespace DeportivoUCN.API.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+// comentario de prueba
 public class AuthController(IAuthService authService) : ControllerBase
 {
     [HttpPost("register")]
