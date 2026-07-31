@@ -1,0 +1,42 @@
+name: Backend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "feature/missing-modules" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Continuous Integration (CI)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 10.0 SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore DeportivoUCN.slnx
+
+    - name: Build Project
+      run: dotnet build --configuration Release --no-restore
+
+  deploy:
+    name: Continuous Deployment (CD)
+    needs: build
+    runs-on: [self-hosted, linux, backend-vm]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/missing-modules'
+
+    steps:
+    - name: Checkout Code on VM
+      uses: actions/checkout@v4
+
+    - name: Restart Docker Containers
+      run: |
+        docker compose down
+        docker compose up -d --build api
