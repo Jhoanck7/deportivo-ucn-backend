@@ -29,7 +29,7 @@ builder.Services.AddScoped<ICourtRepository, CourtRepository>();
 builder.Services.AddScoped<ICourtService, CourtService>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IBookingService, BookingService>();
-builder.Services.AddSingleton<IEmailService, EmailService>();
+builder.Services.AddHttpClient<IEmailService, EmailService>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
