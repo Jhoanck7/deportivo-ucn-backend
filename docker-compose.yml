@@ -15,13 +15,11 @@ services:
   api:
     build: .
     container_name: deportivo_api
-    depends_on:
-      - db
     ports:
       - "5059:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=db;Database=DeportivoUCN;Username=postgres;Password=${DB_PASSWORD}
+      - ConnectionStrings__DefaultConnection=${CONNECTION_STRING}
     restart: unless-stopped
 
 volumes:
