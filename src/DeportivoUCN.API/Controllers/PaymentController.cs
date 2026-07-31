@@ -39,6 +39,24 @@ public class PaymentController(DeportivoUCNContext context, IConfiguration confi
             return NotFound(new { message = "Reserva no encontrada" });
         }
 
+        bool useSimulator = configuration.GetValue<bool>("UseWebpaySimulator", true);
+        if (useSimulator)
+        {
+            var simulatedToken = $"sim_token_{Guid.NewGuid().ToString("N")[..8]}";
+            Transactions[simulatedToken] = (booking.Id, returnType);
+            return Ok(new
+            {
+                message = "Transacción iniciada (Simulador)",
+                data = new
+                {
+                    token = simulatedToken,
+                    urlRedireccion = "/webpay-sim.html",
+                    amount = booking.DepositAmount,
+                    courtName = booking.Court?.Name
+                }
+            });
+        }
+
         using var client = new HttpClient();
         // Evitar bloqueo WAF agregando un User-Agent real
         client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
